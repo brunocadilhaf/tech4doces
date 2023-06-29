@@ -1,10 +1,22 @@
 package br.com.tech4me.tech4doces.model;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document
 public class Produtos {
+    @Id
+    private String id;
     private TipoItem tipoItem;
     private String descricao;
     private double valor;
     
+    public String getId() {
+        return id;
+    }
+    public void setId(String id) {
+        this.id = id;
+    }
     public TipoItem getTipoItem() {
         return tipoItem;
     }

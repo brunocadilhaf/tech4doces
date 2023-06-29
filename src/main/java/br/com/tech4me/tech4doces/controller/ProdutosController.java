@@ -1,8 +1,8 @@
 package br.com.tech4me.tech4doces.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,59 +15,52 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.tech4me.tech4doces.model.Produtos;
+import br.com.tech4me.tech4doces.repository.ProdutosRepository;
 
 @RestController
 @RequestMapping("/produtos")
 public class ProdutosController {
-    List<Produtos> produtos = new ArrayList<>();
+    @Autowired
+    private ProdutosRepository repositorio;
 
     @GetMapping
     public List<Produtos> obterProdutos() {
-        return produtos;
+        return repositorio.findAll();
     }
 
-    @GetMapping("/{descricao}")
-    public Produtos consultarPorNome(@PathVariable String descricao) {
-        Produtos produto = produtos.stream()
-            .filter(p -> p.getDescricao().equalsIgnoreCase(descricao))
-            .findFirst().orElse(null);
+    @GetMapping("/{id}")
+    public Produtos consultarPorId(@PathVariable String id) {
+        Produtos produto = repositorio.findById(id).orElse(null);
         
         return produto;
     }
 
     @PostMapping
     public ResponseEntity<String> cadastroProduto(@RequestBody Produtos produto) {
-        produtos.add(produto);
+        repositorio.save(produto);
         String mensagem = String.format("Categoria: %s - Produto: %s cadastrado com sucesso!", 
             produto.getTipoItem(), produto.getDescricao());
 
         return new ResponseEntity<>(mensagem, HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/{descricao}")
-    public String removerProduto(@PathVariable String descricao) {
-        Boolean removeu = produtos.removeIf(p -> p.getDescricao().equalsIgnoreCase(descricao));
-
-        if (removeu) {
-            return "Produto deletado com sucesso!";
-        } else {
-            return "Produto não localizado!";
-        }
-        
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> removerProduto(@PathVariable String id) {
+        repositorio.deleteById(id);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PutMapping("/{descricao}")
-    public Produtos atualizarProduto(@PathVariable String descricao, @RequestBody Produtos novoProduto) {
+    @PutMapping("/{id}")
+    public Produtos atualizarProduto(@PathVariable String id, @RequestBody Produtos novoProduto) {
         // Localizar
-        Produtos antigoProduto = produtos.stream()
-            .filter(p -> p.getDescricao().equalsIgnoreCase(descricao))
-            .findFirst().orElse(null);
+        Produtos antigoProduto = repositorio.findById(id).orElse(null);
 
         // Atualizar
         if (antigoProduto != null) {
             antigoProduto.setTipoItem(novoProduto.getTipoItem());
             antigoProduto.setDescricao(novoProduto.getDescricao());
             antigoProduto.setValor(novoProduto.getValor());
+            repositorio.save(antigoProduto);
         }
         // devolver o produto
         return antigoProduto;
